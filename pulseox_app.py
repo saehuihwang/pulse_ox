@@ -56,7 +56,7 @@ def plot():
     # No range padding on x: signal spans whole plot
     p.x_range.range_padding = 0
 
-    # We'll sue whitesmoke backgrounds
+    # We'll use whitesmoke backgrounds
     p.border_fill_color = "whitesmoke"
 
     # Defined the data source
@@ -250,10 +250,7 @@ def stream_update(
         "Voltage2": data["Voltage2"][data["prev_array_length"] :],
     }
 
-    # print(new_data)
     source.stream(new_data, rollover)
-    # _,_,_,_,_, oxygen = take_snapshot(source, n=window)
-    # oxygen_source.stream({"oxygen" : [o]})
     window = 200
     dac_delay = 5
     if len(source.data["time_ms"]) > window:
@@ -275,7 +272,6 @@ def stream_update(
             )
 
             # if there are peaks
-            # DO SOMETHING
             heartrate_source.stream({"heartrate": heartrates})
             heartrate_display.text = (
                 str(int(scipy.stats.trim_mean(heartrate_source.data["heartrate"], 0.1)))
@@ -294,7 +290,6 @@ def stream_update(
             Voltage2=[new_data["Voltage2"][-1]],
         )
     data["prev_array_length"] = len(data["time_ms"])
-    # print(data)
 
 
 def take_snapshot(datasource, n=50):
@@ -307,8 +302,6 @@ def take_snapshot(datasource, n=50):
 
     v1_dc = extend_moving_avg(v1_dc, n)
     v2_dc = extend_moving_avg(v2_dc, n)
-    #     rescaled_v1 = rescale(v1_window)
-    #     rescaled_v2 = rescale(v2_window)
     smooth_v1_window = savgol_filter(v1_window, window_length=21, polyorder=3)
     smooth_v2_window = savgol_filter(v1_window, window_length=21, polyorder=3)
     v1_peak_inds = scipy.signal.find_peaks(smooth_v1_window, prominence=0.0035)[0]
@@ -334,15 +327,6 @@ def take_snapshot(datasource, n=50):
 
     heartrates = np.array(1) / np.ediff1d(v2_peak_times) * 60
     return (v1_peak_times, v2_peak_times, v1_dc, v2_dc, time_window, oxygen, heartrates)
-
-
-# def rescale(signal):
-#     """Rescale signal to go from -1 to 1."""
-#     y = signal - signal.mean()
-#     y = 1 + 2 / (y.max() - y.min()) * (y - y.max())
-
-#     return y
-
 
 def extend_moving_avg(l, length):
     """Since moving average returns an array that is smaller than the
@@ -375,18 +359,8 @@ def pulse_app(
         # Controls
         stream_controls = controls("stream")
 
-        # Shut down
-        # shutdown_button = bokeh.models.Button(
-        #     label="shut down", button_type="danger", width=100
-        # )
-
         # Layouts
         stream_layout = layout(p_stream, stream_controls)
-
-        # # Shut down layout
-        # shutdown_layout = bokeh.layouts.row(
-        #     bokeh.models.Spacer(width=670), shutdown_button
-        # )
 
         # results layout
         url = "https://i.ibb.co/rfK829J/health-insights-heart-rate.png"
@@ -401,13 +375,6 @@ def pulse_app(
         app_layout = bokeh.layouts.column(
             bokeh.layouts.row(stream_layout, results_layout), background="whitesmoke"
         )
-
-        def _acquire_callback(event=None):
-            acquire_callback(
-                arduino,
-                stream_data,
-                rollover,
-            )
 
         def _stream_callback(attr, old, new):
             stream_callback(arduino, stream_data, new)
